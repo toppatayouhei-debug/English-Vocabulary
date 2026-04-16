@@ -1,64 +1,59 @@
-{\rtf1\ansi\ansicpg932\cocoartf2761
-\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;}
-{\colortbl;\red255\green255\blue255;}
-{\*\expandedcolortbl;;}
-\paperw11900\paperh16840\margl1440\margr1440\vieww28600\viewh18000\viewkind0
-\deftab560
-\pard\pardeftab560\slleading20\partightenfactor0
+import streamlit as st
+import pandas as pd
+import random
 
-\f0\fs26 \cf0 import streamlit as st\
-import pandas as pd\
-import random\
-\
-# \uc0\u12487 \u12540 \u12479 \u12398 \u35501 \u12415 \u36796 \u12415 \
-df = pd.read_csv('english.csv')\
-\
-st.title("\uc0\u55357 \u56612  \u33521 \u21336 \u35486 4\u25246 \u12510 \u12473 \u12479 \u12540 ")\
-\
-# \uc0\u12475 \u12483 \u12471 \u12519 \u12531 \u29366 \u24907 \u12398 \u21021 \u26399 \u21270 \
-if 'idx' not in st.session_state:\
-    st.session_state.idx = 0\
-    st.session_state.score = 0\
-    st.session_state.questions = df.sample(frac=1).reset_index(drop=True)\
-\
-# \uc0\u12463 \u12452 \u12474 \u20013 \
-if st.session_state.idx < len(st.session_state.questions):\
-    row = st.session_state.questions.iloc[st.session_state.idx]\
-    \
-    st.subheader(f"\uc0\u31532  \{st.session_state.idx + 1\} \u21839 ")\
-    st.info("\uc0\u12371 \u12398 \u21336 \u35486 \u12398 \u24847 \u21619 \u12434 \u36984 \u12435 \u12391 \u12367 \u12384 \u12373 \u12356 ")\
-    st.write(f"## **\{row['question']\}**")\
-\
-    # \uc0\u36984 \u25246 \u32930 \u12398 \u20316 \u25104 \u65288 \u27491 \u35299 1\u12388  + \u12480 \u12511 \u12540 3\u12388 \u65289 \
-    choices = [row['answer'], row['dummy1'], row['dummy2'], row['dummy3']]\
-    # \uc0\u36984 \u25246 \u32930 \u12434 \u12471 \u12515 \u12483 \u12501 \u12523 \u65288 \u27598 \u22238 \u38918 \u30058 \u12434 \u22793 \u12360 \u12427 \u65289 \
-    if 'shuffled_choices' not in st.session_state or st.session_state.new_ques:\
-        random.shuffle(choices)\
-        st.session_state.shuffled_choices = choices\
-        st.session_state.new_ques = False\
-\
-    # 4\uc0\u25246 \u12508 \u12479 \u12531 \u12398 \u20316 \u25104 \
-    for choice in st.session_state.shuffled_choices:\
-        if st.button(choice, use_container_width=True):\
-            if choice == row['answer']:\
-                st.success("\uc0\u10024  \u27491 \u35299 \u65281 \u65281 ")\
-                st.session_state.score += 1\
-            else:\
-                st.error(f"\uc0\u10060  \u27531 \u24565 \u65281  \u27491 \u35299 \u12399 \u12300 \{row['answer']\}\u12301 \u12391 \u12375 \u12383 \u12290 ")\
-            \
-            st.session_state.idx += 1\
-            st.session_state.new_ques = True\
-            st.button("\uc0\u27425 \u12398 \u21839 \u38988 \u12408 ")\
-\
-# \uc0\u20840 \u21839 \u32066 \u20102 \
-else:\
-    st.balloons()\
-    st.write(f"## \uc0\u20840 \u21839 \u32066 \u20102 \u65281 \u27491 \u35299 \u25968 : \{st.session_state.score\} / \{len(st.session_state.questions)\}")\
-    if st.button("\uc0\u26368 \u21021 \u12363 \u12425 \u12420 \u12426 \u30452 \u12377 "):\
-        st.session_state.idx = 0\
-        st.session_state.score = 0\
-        st.session_state.new_ques = True\
-        st.rerun()\
-\pard\pardeftab560\slleading20\qj\partightenfactor0
-\cf0 \'a0\
-}
+# データの読み込み
+df = pd.read_csv('english.csv')
+
+st.title("🔤 英単語4択マスター")
+
+# セッション状態の初期化
+if 'idx' not in st.session_state:
+    st.session_state.idx = 0
+    st.session_state.score = 0
+    st.session_state.questions = df.sample(frac=1).reset_index(drop=True)
+    st.session_state.new_ques = True
+
+# クイズ中
+if st.session_state.idx < len(st.session_state.questions):
+    row = st.session_state.questions.iloc[st.session_state.idx]
+    
+    st.subheader(f"第 {st.session_state.idx + 1} 問 / 全 {len(st.session_state.questions)} 問")
+    st.write(f"### この単語の意味は？: **{row['question']}**")
+
+    # 選択肢の作成とシャッフル
+    if st.session_state.new_ques:
+        choices = [row['answer'], row['dummy1'], row['dummy2'], row['dummy3']]
+        random.shuffle(choices)
+        st.session_state.shuffled_choices = choices
+        st.session_state.new_ques = False
+        st.session_state.answered = False
+
+    # 4択ボタン
+    for choice in st.session_state.shuffled_choices:
+        # すでに回答した後はボタンを押せなくする
+        if st.button(choice, use_container_width=True, disabled=st.session_state.answered):
+            st.session_state.answered = True
+            if choice == row['answer']:
+                st.success("✨ 正解！！")
+                st.session_state.score += 1
+            else:
+                st.error(f"❌ 残念！ 正解は「{row['answer']}」でした。")
+            st.write("---")
+
+    # 回答した後に「次へ」ボタンを出す
+    if st.session_state.answered:
+        if st.button("次の問題へ"):
+            st.session_state.idx += 1
+            st.session_state.new_ques = True
+            st.rerun()
+
+# 全問終了
+else:
+    st.balloons()
+    st.write(f"## 全問終了！正解数: {st.session_state.score} / {len(st.session_state.questions)}")
+    if st.button("最初からやり直す"):
+        st.session_state.idx = 0
+        st.session_state.score = 0
+        st.session_state.new_ques = True
+        st.rerun()
