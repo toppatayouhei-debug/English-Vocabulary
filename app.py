@@ -2,10 +2,14 @@ import streamlit as st
 import pandas as pd
 import random
 
-# データの読み込み
-df = pd.read_csv('english.csv')
+# 1. データの読み込み（ファイル名を先ほど作成したものに変更）
+try:
+    df = pd.read_csv('final_tango_list.csv')
+except FileNotFoundError:
+    st.error("CSVファイル 'final_tango_list.csv' が見つかりません。プログラムと同じフォルダに置いてください。")
+    st.stop()
 
-st.title("🔤 英単語4択マスター")
+st.title("シス単全レベル完全カバーの４択アプリ")
 
 # セッション状態の初期化
 if 'idx' not in st.session_state:
@@ -23,7 +27,11 @@ if st.session_state.idx < len(st.session_state.questions):
 
     # 選択肢の作成とシャッフル
     if st.session_state.new_ques:
-        choices = [row['answer'], row['dummy1'], row['dummy2'], row['dummy3']]
+        # 修正：dummy_pool（カンマ区切りの文字列）をリストに分割
+        dummies = [d.strip() for d in str(row['dummy_pool']).split(',')]
+        
+        # 正解とダミー3つを合わせる（もしダミーが足りない場合も考慮）
+        choices = [row['all_answers']] + dummies[:3]
         random.shuffle(choices)
         st.session_state.shuffled_choices = choices
         st.session_state.new_ques = False
@@ -31,14 +39,13 @@ if st.session_state.idx < len(st.session_state.questions):
 
     # 4択ボタン
     for choice in st.session_state.shuffled_choices:
-        # すでに回答した後はボタンを押せなくする
         if st.button(choice, use_container_width=True, disabled=st.session_state.answered):
             st.session_state.answered = True
-            if choice == row['answer']:
+            if choice == row['all_answers']:
                 st.success("✨ 正解！！")
                 st.session_state.score += 1
             else:
-                st.error(f"❌ 残念！ 正解は「{row['answer']}」でした。")
+                st.error(f"❌ 残念！ 正解は「{row['all_answers']}」でした。")
             st.write("---")
 
     # 回答した後に「次へ」ボタンを出す
@@ -56,4 +63,5 @@ else:
         st.session_state.idx = 0
         st.session_state.score = 0
         st.session_state.new_ques = True
+        st.session_state.questions = df.sample(frac=1).reset_index(drop=True)
         st.rerun()
