@@ -12,7 +12,7 @@ except FileNotFoundError:
 
 # --- 2. 画面設定 ---
 st.set_page_config(page_title="英単語 文脈攻略マシン", layout="centered")
-st.title("🎓 シス単：例文・文脈攻略マシン")
+st.title("📘 シス単が手元にないときに使うやつ")
 
 # --- 3. サイドバー設定（レベルはCSVの'level'列で判定） ---
 st.sidebar.header("学習設定")
